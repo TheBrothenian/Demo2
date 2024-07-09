@@ -1,0 +1,53 @@
+name: DevSecOps Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      # Build and Test (replace with your build & test commands)
+      - name: Build the application
+        run: make build
+
+      - name: Run unit tests
+        run: make test
+
+  # Static Application Security Testing (SAST) with Bandit (Python)
+  sast:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Bandit
+        run: pip install bandit
+      - name: Run Bandit SAST scan
+        run: bandit -r .
+
+  # Software Composition Analysis (SCA) with Snyk (requires free account)
+  sca:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Snyk CLI
+        run: curl -L https://docs.snyk.io/snyk-cli/download | bash
+      - name: Login to Snyk (replace with your Snyk token)
+        run: snyk auth <your_snyk_token>
+      - name: Run Snyk SCA scan
+        run: snyk test
+
+  # Security Linting with Shellcheck (for bash/sh scripts)
+  lint:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Shellcheck
+        run: sudo apt install shellcheck
+      - name: Run Shellcheck lint
+        run: shellcheck -s ./**/*.sh
